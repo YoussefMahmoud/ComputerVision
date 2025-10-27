@@ -4,8 +4,9 @@ import time
 import numpy as np
 import math
 import pyautogui
-#for windows #from win_func import Volume#
-from linux_func import Volume
+from win_func import Volume
+vol=Volume()
+#from linux_func import Volume
 ########################################
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -16,7 +17,7 @@ detection = None
 finger_length = None
 pinky_finger_length = None
 hand_state = None
-vol = 0
+#vol = 0
 ########################################
 
 mp_holistic = mp.solutions.holistic
@@ -107,14 +108,21 @@ with mp_holistic.Holistic() as holistic:
                 finger_length = "Far"
             if volume_i_length < 30 and finger_length == "Far":
                 finger_length = "Not Far"
-                Volume.volume_up()
+                vol.volume_up()
+                # pyautogui.press('up')
+                print('Volume up')
+
 
             #decreasing the volume
             if volume_d_length > 50:
                 pinky_finger_length = "Far"
             if volume_d_length < 30 and pinky_finger_length == "Far":
                 pinky_finger_length = "Not Far"
-                Volume.volume_down()
+                print('Fingers Touching')
+                vol.volume_down()
+                # pyautogui.press('down')
+                print('Volume down')
+
 
             #pausing/playing
             if volume_angle > 100:
@@ -124,12 +132,15 @@ with mp_holistic.Holistic() as holistic:
                 #if it doesn't work well on linux change to 
                 #pyautogui.press('space')
                 pyautogui.press('playpause')
+                print('Play/Pause')
 
         except:
             pass
         
         #showing volume level on the top left side of the feed
-        cv2.putText(image, str(Volume.volume()), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, black)
+        # cv2.putText(image, str(vol.get_volume()), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, black)
+        cv2.putText(image, str(hand_state), (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, black)
+
         cv2.imshow('Frame', image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

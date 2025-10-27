@@ -1,26 +1,34 @@
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-
-#getting a list of current speakers
-devices = AudioUtilities.GetSpeakers()
-interface = devices.Activate(
-    IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-
-#getting the volume level
-volume = cast(interface, POINTER(IAudioEndpointVolume))
-volume_level = volume.GetMasterVolumeLevel()
-range = volume.GetVolumeRange()
-
-class Volume():
-    def volume():
-        vol = np.interp(volume_level, [-37, 0], [0, 100])
+import numpy as np
 
 
-    def volume_down():
-        volume_level = volume_level - 2
-        volume.SetMasterVolumeLevel(volume_level, None)
+class Volume:
+    def __init__(self):
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(
+            IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        self.volume = cast(interface, POINTER(IAudioEndpointVolume))
 
-    def volume_up():
-        volume_level = volume_level + 2
-        volume.SetMasterVolumeLevel(volume_level, None)
+    def get_volume(self):
+        # get current dB level and convert to percent
+        level = self.volume.GetMasterVolumeLevel()
+        min_vol, max_vol, _ = self.volume.GetVolumeRange()
+        percent = np.interp(level, [min_vol, max_vol], [0, 100])
+        return round(percent)
+
+    def volume_down(self, step_db=2.0):
+        level = self.volume.GetMasterVolumeLevel() - step_db
+        self.volume.SetMasterVolumeLevel(level, None)
+
+    def volume_up(self, step_db=2.0):
+        level = self.volume.GetMasterVolumeLevel() + step_db
+        self.volume.SetMasterVolumeLevel(level, None)
+
+
+if __name__ == "__main__":
+    vol = Volume()
+    print("Current volume:", vol.get_volume(), "%")
+    vol.volume_down()
+    print("After volume down:", vol.get_volume(), "%")
